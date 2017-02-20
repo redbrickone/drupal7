@@ -1,0 +1,47 @@
+version: '2'
+services:
+  drupal7-mysql:
+    container_name: drupal7-mysql
+    image: mysql:5.6
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: drupal
+      MYSQL_USER: mysql
+      MYSQL_PASSWORD: mysql
+    volumes:
+      - ../sites-databases/drupal7:/var/lib/mysql
+    networks:
+      - dockercompose
+    command: mysqld --max_allowed_packet=64M
+    restart: always
+  drupal7:
+    container_name: drupal7
+    image: codekoalas/drupal8
+    environment:
+      VIRTUAL_HOST: .drupal7.dev
+      GIT_HOSTS: "10.170.3.208 gitlab.drupal7.com"
+      GIT_REPO: https://gitlab.drupal7.com/sites/drupal7.git
+      GIT_BRANCH: master
+      MYSQL_SERVER: mysql
+      MYSQL_DATABASE: drupal
+      MYSQL_USER: mysql
+      MYSQL_PASSWORD: mysql
+      DRUPAL_BASE_URL: http://drupal7.dev
+      DRUPAL_TRUSTED_HOSTS: drupal7\.dev$$
+      DRUPAL_HTTPS: "off"
+      APACHE_DOCROOT: /var/www/site/docroot
+      PRODUCTION: "false"
+      SESMailHub: mail-relay.ckdev.io
+      #LOCAL: "true"
+    volumes:
+      - ../sites-files/drupal7:/mnt/sites-files
+      - ./:/var/www/site
+    networks:
+      - dockercompose
+    links:
+      - drupal7-mysql:mysql
+    restart: always
+networks:
+  dockercompose:
+    external:
+      name: dockercompose_dockercompose
